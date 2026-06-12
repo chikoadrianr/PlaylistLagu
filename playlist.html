@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Playlist Lagu</title>
+
+<style>
+    *{
+        margin:0;
+        padding:0;
+        box-sizing:border-box;
+        font-family:Arial, sans-serif;
+    }
+
+    body{
+        background:#f4f4f4;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        min-height:100vh;
+    }
+
+    .container{
+        width:450px;
+        background:white;
+        padding:25px;
+        border-radius:15px;
+        box-shadow:0 0 15px rgba(0,0,0,0.2);
+    }
+
+    h1{
+        text-align:center;
+        margin-bottom:20px;
+        color:#333;
+    }
+
+    .input-group{
+        display:flex;
+        gap:10px;
+        margin-bottom:15px;
+    }
+
+    input{
+        flex:1;
+        padding:10px;
+        border:1px solid #ccc;
+        border-radius:8px;
+    }
+
+    button{
+        padding:10px 15px;
+        border:none;
+        border-radius:8px;
+        cursor:pointer;
+        font-weight:bold;
+    }
+
+    .btn-add{
+        background:#28a745;
+        color:white;
+    }
+
+    .btn-delete{
+        background:#dc3545;
+        color:white;
+        width:100%;
+        margin-top:10px;
+    }
+
+    .controls{
+        display:flex;
+        justify-content:center;
+        gap:10px;
+        margin-top:15px;
+    }
+
+    .controls button{
+        background:#007bff;
+        color:white;
+    }
+
+    ul{
+        list-style:none;
+        margin-top:15px;
+    }
+
+    li{
+        padding:10px;
+        border-bottom:1px solid #ddd;
+    }
+
+    .playing{
+        background:#d4edda;
+        font-weight:bold;
+        color:#155724;
+    }
+
+    .current-song{
+        text-align:center;
+        margin-top:15px;
+        font-size:18px;
+        font-weight:bold;
+        color:#333;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>🎵 Playlist Lagu</h1>
+
+    <div class="input-group">
+        <input type="text" id="songInput" placeholder="Masukkan judul lagu">
+        <button class="btn-add" onclick="addSong()">Tambah</button>
+    </div>
+
+    <ul id="playlist"></ul>
+
+    <button class="btn-delete" onclick="deleteCurrentSong()">
+        Hapus Lagu Saat Ini
+    </button>
+
+    <div class="controls">
+        <button onclick="prevSong()">⏮ Previous</button>
+        <button onclick="nextSong()">Next ⏭</button>
+    </div>
+
+    <div class="current-song" id="currentSong">
+        Belum ada lagu
+    </div>
+
+</div>
+
+<script>
+
+class Node{
+    constructor(title){
+        this.title = title;
+        this.next = null;
+        this.prev = null;
+    }
+}
+
+class Playlist{
+    constructor(){
+        this.head = null;
+        this.tail = null;
+        this.current = null;
+    }
+
+    add(title){
+        const newNode = new Node(title);
+
+        if(!this.head){
+            this.head = this.tail = this.current = newNode;
+        }else{
+            this.tail.next = newNode;
+            newNode.prev = this.tail;
+            this.tail = newNode;
+        }
+
+        render();
+    }
+
+    deleteCurrent(){
+        if(!this.current) return;
+
+        let temp = this.current;
+
+        if(this.head === this.tail){
+            this.head = this.tail = this.current = null;
+        }
+        else if(temp === this.head){
+            this.head = this.head.next;
+            this.head.prev = null;
+            this.current = this.head;
+        }
+        else if(temp === this.tail){
+            this.tail = this.tail.prev;
+            this.tail.next = null;
+            this.current = this.tail;
+        }
+        else{
+            temp.prev.next = temp.next;
+            temp.next.prev = temp.prev;
+            this.current = temp.next;
+        }
+
+        render();
+    }
+
+    next(){
+        if(this.current && this.current.next){
+            this.current = this.current.next;
+            render();
+        }
+    }
+
+    prev(){
+        if(this.current && this.current.prev){
+            this.current = this.current.prev;
+            render();
+        }
+    }
+}
+
+const playlist = new Playlist();
+
+function addSong(){
+    const input = document.getElementById("songInput");
+
+    if(input.value.trim() === ""){
+        alert("Masukkan judul lagu!");
+        return;
+    }
+
+    playlist.add(input.value.trim());
+    input.value = "";
+}
+
+function deleteCurrentSong(){
+    playlist.deleteCurrent();
+}
+
+function nextSong(){
+    playlist.next();
+}
+
+function prevSong(){
+    playlist.prev();
+}
+
+function render(){
+
+    const ul = document.getElementById("playlist");
+    const currentSong = document.getElementById("currentSong");
+
+    ul.innerHTML = "";
+
+    let temp = playlist.head;
+
+    while(temp){
+
+        const li = document.createElement("li");
+
+        li.textContent = temp.title;
+
+        if(temp === playlist.current){
+            li.classList.add("playing");
+        }
+
+        ul.appendChild(li);
+
+        temp = temp.next;
+    }
+
+    if(playlist.current){
+        currentSong.innerHTML =
+            "▶ Sedang Diputar: " + playlist.current.title;
+    }else{
+        currentSong.innerHTML =
+            "Playlist Kosong";
+    }
+}
+
+</script>
+
+</body>
+</html>
